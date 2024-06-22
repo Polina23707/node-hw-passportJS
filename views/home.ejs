@@ -1,7 +1,7 @@
 <% if (!user) { %>
     <p>Главная</p> 
-    <p>Пожалуйста, <a href="/login"> авторизуйтесь </a></p>
+    <p>Пожалуйста, <a href="/api/user/login"> авторизуйтесь </a></p>
 <% } else { %>
     <p>Привет, <%= user.username %>. </p>
-    <p>Перейти в <a href="/profile">профиль</a>.</p>
+    <p>Перейти в <a href="/api/user/me">профиль</a>.</p>
 <% } %>
