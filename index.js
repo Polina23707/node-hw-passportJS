@@ -16,12 +16,27 @@ const verify = (username, password, done) => {
   })
 }
 
+const addUser = (username, password, done) => {
+  db.users.findByUsername(username, (err, user) => {
+    if (err) {
+      db.users.addUser(username,password,done)
+    }
+    if (!user) { return done(null, false) }
+
+    if( !db.users.verifyPassword(user, password)) {
+      return done(null, false)
+    }
+    return done(null, user)
+  })
+}
+
 const options = {
   usernameField: "username",
   passwordField: "password",
 }
 
 passport.use('local', new LocalStrategy(options, verify))
+passport.use('local', new LocalStrategy(options, addUser))
 
 passport.serializeUser((user, cb) => {
   cb(null, user.id)
@@ -43,30 +58,42 @@ app.use(session({ secret: 'SECRET'}));
 app.use(passport.initialize())
 app.use(passport.session())
 
-app.get('/', (req, res) => {
-  res.render('home', { user: req.user })
-})
+// app.get('/', (req, res) => {
+//   res.render('home', { user: req.user })
+// })
 
-app.get('/login',   (req, res) => {
+app.get('/api/user/login',   (req, res) => {
   res.render('login')
 })
 
-app.post('/login',
-  passport.authenticate('local', { failureRedirect: '/login' }),
+app.post('/api/user/login',
+  passport.authenticate('local', { failureRedirect: '/api/user/signup' }),
   (req, res) => {
     console.log("req.user: ", req.user)
-    res.redirect('/')
+    res.redirect('/api/user/me')
 })
 
-app.get('/logout',  (req, res) => {
-  req.logout()
-  res.redirect('/')
+app.get('/api/user/signup',   (req, res) => {
+  res.render('signup')
 })
 
-app.get('/profile',
+app.post('/api/user/signup',
+  passport.authenticate('local', { failureRedirect: '/api/user/signup' }),
+  (req, res) => {
+    console.log("req.user: ", req.user)
+    res.redirect('/api/user/me')
+})
+
+
+// app.get('/api/user/logout',  (req, res) => {
+//   req.logout()
+//   res.redirect('/api/user/login')
+// })
+
+app.get('/api/user/me',
   (req, res, next) => {
     if (!req.isAuthenticated()) {
-      return res.redirect('/login')
+      return res.redirect('/api/user/login')
     }
     next()
   },
